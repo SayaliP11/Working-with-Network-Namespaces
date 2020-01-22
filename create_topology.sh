@@ -38,20 +38,32 @@ ip netns exec dest_1 ip link set dest_eth_1 up
 ip netns exec dest_2 ip link set lo up
 ip netns exec dest_2 ip link set dest_eth_2
 ip netns exec source_1 ip address add 10.0.0.1/24 dev source_eth_1
-ip netns exec source_2 ip address add 10.0.0.2/24 dev source_eth_2
+ip netns exec source_2 ip address add 10.0.1.2/24 dev source_eth_2
 ip netns exec router_1 ip address add 10.0.0.3/24 dev router_eth_1_1
-ip netns exec router_1 ip address add 10.0.0.4/24 dev router_eth_1_2
-ip netns exec router_1 ip address add 10.0.0.5/24 dev router_eth_1_3
-ip netns exec router_2 ip address add 10.0.0.6/24 dev router_eth_2_1
-ip netns exec router_2 ip address add 10.0.0.7/24 dev router_eth_2_2
-ip netns exec router_2 ip address add 10.0.0.8/24 dev router_eth_2_3
-ip netns exec dest_1 ip address add 10.0.0.9/24 dev dest_eth_1
-ip netns exec dest_2 ip address add 10.0.0.10/24 dev dest_eth_2
+ip netns exec router_1 ip address add 10.0.1.4/24 dev router_eth_1_2
+ip netns exec router_1 ip address add 10.0.2.5/24 dev router_eth_1_3
+ip netns exec router_2 ip address add 10.0.2.6/24 dev router_eth_2_1
+ip netns exec router_2 ip address add 10.0.3.7/24 dev router_eth_2_2
+ip netns exec router_2 ip address add 10.0.4.8/24 dev router_eth_2_3
+ip netns exec dest_1 ip address add 10.0.3.9/24 dev dest_eth_1
+ip netns exec dest_2 ip address add 10.0.4.10/24 dev dest_eth_2
 ip netns exec source_1 tc qdisc add dev source_eth_1 root tbf rate 1024kbit latency 2ms burst 1540
 ip netns exec source_2 tc qdisc add dev source_eth_2 root tbf rate 1024kbit latency 2ms burst 1540
 ip netns exec router_1 tc qdisc add dev router_eth_1_3 root tbf rate 100mbit latency 50ms burst 1540
 ip netns exec router_2 tc qdisc add dev router_eth_2_2 root tbf rate 1024kbit latency 2ms burst 1540
 ip netns exec router_2 tc qdisc add dev router_eth_2_3 root tbf rate 1024kbit latency 2ms burst 1540
+ip netns exec dest_1 ip route add default via 10.0.3.7 dev dest_eth_1
+ip netns exec dest_2 ip link set dest_eth_2 up
+ip netns exec dest_2 ip route add default via 10.0.4.8 dev dest_eth_2
+ip netns exec router_1 sysctl -w net.ipv4.ip_forward=1
+ip netns exec router_2 sysctl -w net.ipv4.ip_forward=1
+ip netns exec source_1 ip route add default via 10.0.0.3 dev source_eth_1
+ip netns exec source_2 ip route add default via 10.0.1.4 dev source_eth_2
+ip netns exec router_1 ip route add default via 10.0.2.6 dev router_eth_1_3
+ip netns exec router_2 ip route add default via 10.0.2.5 dev router_eth_2_1
+
+
+
 
 
 

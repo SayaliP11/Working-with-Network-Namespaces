@@ -61,18 +61,18 @@ Create a Dumbell Topology to test Congestion and Queue Management Algorithms.
 6) Assign IP addresses to all the interfaces
 -------------------------------------------------------------------------------------------------------------------------------
 # ip netns exec source_1 ip address add 10.0.0.1/24 dev source_eth_1
-# ip netns exec source_2 ip address add 10.0.0.2/24 dev source_eth_2
+# ip netns exec source_2 ip address add 10.0.1.2/24 dev source_eth_2
 
 # ip netns exec router_1 ip address add 10.0.0.3/24 dev router_eth_1_1
-# ip netns exec router_1 ip address add 10.0.0.4/24 dev router_eth_1_2
-# ip netns exec router_1 ip address add 10.0.0.5/24 dev router_eth_1_3
+# ip netns exec router_1 ip address add 10.0.1.4/24 dev router_eth_1_2
+# ip netns exec router_1 ip address add 10.0.2.5/24 dev router_eth_1_3
 
-# ip netns exec router_2 ip address add 10.0.0.6/24 dev router_eth_2_1
-# ip netns exec router_2 ip address add 10.0.0.7/24 dev router_eth_2_2
-# ip netns exec router_2 ip address add 10.0.0.8/24 dev router_eth_2_3
+# ip netns exec router_2 ip address add 10.0.2.6/24 dev router_eth_2_1
+# ip netns exec router_2 ip address add 10.0.3.7/24 dev router_eth_2_2
+# ip netns exec router_2 ip address add 10.0.4.8/24 dev router_eth_2_3
 
-# ip netns exec dest_1 ip address add 10.0.0.9/24 dev dest_eth_1
-# ip netns exec dest_2 ip address add 10.0.0.10/24 dev dest_eth_2
+# ip netns exec dest_1 ip address add 10.0.3.9/24 dev dest_eth_1
+# ip netns exec dest_2 ip address add 10.0.4.10/24 dev dest_eth_2
 
 7) Set bandwidth of 1GB/s between sources to router and 100MB/s between two routers(Bottleneck B/W)
 -------------------------------------------------------------------------------------------------------------------------------
@@ -142,6 +142,53 @@ root@parikshit-Lenovo-ideapad-330-15IKB:/home/parikshit# iperf -c 10.0.0.1
 	
 ===============================================================================================================================
 
+9)Configure Paths between source_i to router_i , dest_i to router_i
+and in between router 1 to 2.
+-------------------------------------------------------------------------------------------------------------------------------
+# ip netns exec dest_1 ip route add default via 10.0.3.7 dev dest_eth_1
+# ip netns exec dest_2 ip link set dest_eth_2 up
+# ip netns exec dest_2 ip route add default via 10.0.4.8 dev dest_eth_2
+# ip netns exec source_1 ip route add default via 10.0.0.3 dev source_eth_1
+# ip netns exec source_2 ip route add default via 10.0.1.4 dev source_eth_2
+# ip netns exec router_1 ip route add default via 10.0.2.6 dev router_eth_1_3
+# ip netns exec router_2 ip route add default via 10.0.2.5 dev router_eth_2_1
+
+10) Enable router packet forwarding
+-------------------------------------------------------------------------------------------------------------------------------
+# ip netns exec router_1 sysctl -w net.ipv4.ip_forward=1
+# ip netns exec router_2 sysctl -w net.ipv4.ip_forward=1
+
+11) Create source_1 as iperf server
+-------------------------------------------------------------------------------------------------------------------------------
+# ip netns exec source_1 bash
+# iperf -s
+
+12) Create dest_1 as iperf client
+-------------------------------------------------------------------------------------------------------------------------------
+# ip netns exec dest_1 bash
+# iperf -c 10.0.0.1
+
+===============================Server==========================================================================================
+root@parikshit-Lenovo-ideapad-330-15IKB:/home/parikshit# ip netns exec source_1 bash
+root@parikshit-Lenovo-ideapad-330-15IKB:/home/parikshit# iperf -s
+------------------------------------------------------------
+Server listening on TCP port 5001
+TCP window size:  128 KByte (default)
+------------------------------------------------------------
+[  4] local 10.0.0.1 port 5001 connected with 10.0.3.9 port 35468
+[ ID] Interval       Transfer     Bandwidth
+[  4]  0.0-10.0 sec  2.04 GBytes  1.75 Gbits/sec
+
+=================================client========================================================================================
+root@parikshit-Lenovo-ideapad-330-15IKB:/home/parikshit# ip netns exec dest_1 bash
+root@parikshit-Lenovo-ideapad-330-15IKB:/home/parikshit# iperf -c 10.0.0.1
+------------------------------------------------------------
+Client connecting to 10.0.0.1, TCP port 5001
+TCP window size: 85.0 KByte (default)
+------------------------------------------------------------
+[  3] local 10.0.3.9 port 35468 connected with 10.0.0.1 port 5001
+[ ID] Interval       Transfer     Bandwidth
+[  3]  0.0-10.0 sec  2.04 GBytes  1.75 Gbits/sec
 
 
 
